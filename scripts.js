@@ -1,3 +1,4 @@
+//draw data
 document.addEventListener("DOMContentLoaded", function () {
     function fetchData() {
         fetch("http://localhost:8081/getAllData")
@@ -46,7 +47,7 @@ document.addEventListener("DOMContentLoaded", function () {
     setInterval(fetchData, 5000);
 });
 
-
+//alert
 const alertContainer = document.getElementById("alertContainer");
 function showAlert(message, type) {
     alertContainer.innerHTML = `
@@ -67,7 +68,7 @@ const getDataUpate = ()=>{
     return data;
 }
 
-
+//update processing time
 const updateBtn = document.getElementById("updateBtn")
 updateBtn.addEventListener("click", async () => {
     const dataList = getDataUpate();
@@ -110,3 +111,21 @@ updateBtn.addEventListener("click", async () => {
         showAlert("Error updating ProcTime: " + error.message, "danger");
     }
 });
+
+//reset processed number
+const resetBtn = document.getElementById("resetNumberProcessedBtn")
+resetBtn.addEventListener("click", () => {
+    fetch("http://localhost:8081/resetNumberProcessed", {
+        method: "PUT"
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error("Failed to reset number processed");
+        }
+        return response.json(); // If the response is JSON, otherwise use response.text()
+    })
+    .then(data => console.log("Reset successful:", data))
+    .catch(error => console.error("Error:", error));
+
+    showAlert("Reset number processed successfully!", "warning");
+})
