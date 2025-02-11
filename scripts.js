@@ -1,30 +1,51 @@
 document.addEventListener("DOMContentLoaded", function () {
-    fetch("http://localhost:8081/getAllData")
-        .then(response => {
-            if (!response.ok) {
-                throw new Error("Network response was not ok");
-            }
-            return response.json(); // Chuyển đổi dữ liệu thành JSON
-        })
-        .then(data => {
-            const tbody = document.querySelector("#dataTable tbody");
-            tbody.innerHTML = ""; // Xóa nội dung cũ trước khi cập nhật
+    function fetchData() {
+        fetch("http://localhost:8081/getAllData")
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Network response was not ok");
+                }
+                return response.json();
+            })
+            .then(data => {
+                const tbody = document.querySelector("#dataTable tbody");
+                tbody.innerHTML = ""; // Xóa nội dung cũ trước khi cập nhật
 
-            data.forEach(item => {
-                const row = document.createElement("tr");
-                if(item.NameVNM == "") item.NameVNM = item.Name
-                row.innerHTML = `
-                    <td id="name" class="name d-none">${item.Name}</td>
-                    <td>${item.NameVNM}</td>
-                    <td id="procTime">
-                        <input value=${item.ProcTime}> 
-                    </td>              
-                `;
-                tbody.appendChild(row);
-            });
-        })
-        .catch(error => console.error("Error fetching data:", error));
+                data.forEach(item => {
+                    const row = document.createElement("tr");
+                    if (item.NameVNM === "") item.NameVNM = item.Name;
+
+                    // Xác định trạng thái dựa trên NumberProcessed
+                    let status = "Bình thường";
+                    let statusClass = "text-success"; // Mặc định là xanh (bình thường)
+
+                    if (item.NumberProcessed>0 && ((item.NumberProcessed+1)%50==0 || (item.NumberProcessed+2)%50==0 || (item.NumberProcessed)%50==0) ) {
+                        status = "Cảnh báo quá tải";
+                        statusClass = "text-danger"; // Đỏ nếu quá tải
+                    }
+
+                    row.innerHTML = `
+                        <td id="name" class="name d-none">${item.Name}</td>
+                        <td>${item.NameVNM}</td>
+                        <td id="procTime">
+                            <input value="${item.ProcTime}"> 
+                        </td>      
+                        <td id="numberProcessed">${item.NumberProcessed}</td>    
+                        <td class="${statusClass}">${status}</td>       
+                    `;
+                    tbody.appendChild(row);
+                });
+            })
+            .catch(error => console.error("Error fetching data:", error));
+    }
+
+    // Gọi fetchData ngay khi trang load
+    fetchData();
+
+    // Cập nhật dữ liệu mỗi 5 giây
+    setInterval(fetchData, 5000);
 });
+
 
 const alertContainer = document.getElementById("alertContainer");
 function showAlert(message, type) {
@@ -34,6 +55,8 @@ function showAlert(message, type) {
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>`;
 }
+
+
 const getDataUpate = ()=>{
     const data = [];
     const name = document.querySelectorAll("#dataTable tbody tr #name");
@@ -43,6 +66,8 @@ const getDataUpate = ()=>{
     })
     return data;
 }
+
+
 const updateBtn = document.getElementById("updateBtn")
 updateBtn.addEventListener("click", async () => {
     const dataList = getDataUpate();
